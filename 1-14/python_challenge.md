@@ -148,7 +148,7 @@ recognize the characters. maybe they are in the book,
 but MAYBE they are in the page source.
 ```
 
-directs us to the page source which is a lot of stuff like [2.txt](2.txt).  We screen out the commonly occurring characters.
+directs us to the page source which is a lot of stuff like [2.txt](data/2.txt).  We screen out the commonly occurring characters.
 
 ```
 from utils import load
@@ -181,7 +181,7 @@ and the text of the hint is
 One small letter, surrounded by EXACTLY three big bodyguards on each of its sides.
 ```
 
-We use `load_url` to obtain the page source.  It looks like: [3.txt](3.txt).
+We use `load_url` to obtain the page source.  It looks like: [3.txt](data/3.txt).
 
 So it's pretty clear that we're looking for a lower case letter preceeded and followed by a run of three capitals.  This is a job for the `re` module (which is what the part of the source that I stripped out hints to do).
 
@@ -348,7 +348,7 @@ tp3
 
 There's a nother hint---that word "banner".
 
-Save the data to a file: [5b.txt](5b.txt).
+Save the data to a file: [5b.txt](data/5b.txt).
 
 **5.py**
 
@@ -394,7 +394,7 @@ The specific part of the url is `channel`:  [link](http://www.pythonchallenge.co
 
 Looks like a Rolling Stones album [cover](https://en.wikipedia.org/wiki/Sticky_Fingers).  The wikipedia is not as risque as what I have in my collection of vinyl.
 
-The page [source](6.txt) has 
+The page [source](data/6.txt) has 
 
 ```
 <html> <!-- <-- zip -->
