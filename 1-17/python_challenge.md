@@ -1305,12 +1305,13 @@ I am not quite sure how that gets displayed.  When I get the file myself, it doe
 > 
 ```
 
-I figure out the reason for this.  The downloaded file has dimensions `10000 x 1` while the page source says its dimensions are `100 x 100`.
+I figured out the reason for this.  The downloaded file has dimensions `10000 x 1` while the page source says its dimensions are `100 x 100`.
 
 <img src="figs/14_source.png" alt="Drawing" style="width: 400px;"/>
 
+Apparently it gets coerced to `100 x 100` for display.
 
-The title is "walk around."
+The title is `walk around`.
 
 The source (above) has:
 
@@ -1319,8 +1320,11 @@ The source (above) has:
 ```
 
 The formula looks a little funny with the repetition of `99`:  `(100+99+99+98)`
+and no explicit statement of the second term.
 
-and no explicit statement of the second term.  I just guess:
+It looks a bit like the sum of integers.
+
+I just guess:
 
 ```
 n = 100
@@ -1330,10 +1334,16 @@ while n > 0:
     count += sub
     n -= 2
 
-print count
+print count    # 10000
 ```
 
-prints `10000`.  Bingo.  And the explanation is:
+Bingo.  
+
+Therefore, the second term is `(98+97+97+96)` and the last term is `(2+1+1+0)`.
+
+I don't get anywhere by substituting in the url.
+
+And the explanation is:
 
 ```
 100 + 2(99) + 98
@@ -1341,16 +1351,8 @@ prints `10000`.  Bingo.  And the explanation is:
                          + 96 + 2(95) + 94 ...
 
 ```
+
 so this is twice the sum `1..99` plus `100` which matches the formula `n(n+1)/2`.
-
-```
-n = 99
-n(n+1) = 9900
-```
-
-Therefore, the second term is `(98+97+97+96)` and the last term is `(2+1+1+0)`.
-
-I don't get anywhere by substituting in the url.
 
 ```
 from PIL import Image
@@ -1363,20 +1365,430 @@ print im2.size
 im2.save('wire2.png')
 ```
 
-
 <img src="figs/wire2.png" alt="Drawing" style="width: 200px;"/>
 
-Yep.
+That's what we see in the browser.
 
-So we have these facts:
+So now we have these facts:
  
-* the clue: "walk around"
-* the formula:  `sum 1..99 + 100`
-* `wire.png` image file
-* dimensions as served `10000 x 1`
+* the clue: `walk around`
+* the formula:  `(98+97+97+96) + `
+* `wire.png` --- the image file
+* with dimensions as served `10000 x 1`
 
-I notice that the size of the image is the same as our sum.
+We haven't used the image file yet.  I notice that the total size of the image is the same as our sum.
 
-What would we have if we summed `100 + 2(99) + 98` etc?
+The secret is to `walk around` in constructing a new image.  The top is `100` pixels across, then down `99`, then across (right-to-left) by `99`, then up `98`.  That's the outermost frame of the image.
 
-We'd have 50 terms.
+```
+'''
+10 x 10
+
+round 0:  the outer circle is
+
+  0  1  2  3  4  5  6  7  8  9  
+ 10                         19
+ 20                         29
+ 30                         39
+ 40                         49
+ 50                         59
+ 60                         69
+ 70                         79
+ 80                         89
+ 90 91 92 93 94 95 96 97 98 99                                                                                                                                            
+
+round 1 starts with 11
+
+'''
+
+SZ = 100
+n = SZ
+L = list()
+n = 100
+v = True
+
+while n > 2:
+    if v:
+        print 'n', str(n).rjust(3)
+    o = (SZ-n)/2
+    i = SZ*o + o
+    
+    top = range(i,i+n)
+    #print 'top',  top[0], top[-1]
+    L.append(top)
+    
+    # a range, so not steps-1
+    n -= 1
+    i = L[-1][-1] + SZ
+    right = range(i, SZ*SZ, SZ)[:n]
+    #print 'right', right[0], right[-1]
+    L.append(right)
+    
+    #n -= 1
+    i = L[-1][-1] - 1
+    bottom = range(i, i-n, -1)
+    #print 'bottom', bottom[0], bottom[-1]
+    L.append(bottom)
+    
+    i = L[-1][-1]
+    left = range(i - SZ, top[0], -SZ)
+    L.append(left)
+    n -= 1
+    
+    if v:
+        for sL in L[-4:]:
+            print str(sL[0]).rjust(5),
+            print str(sL[-1]).rjust(5)
+
+
+L.extend([[4949,4950],[5050],[5049]])
+pL = list()
+for sL in L:
+    pL.extend(sL)
+    
+print len(pL)
+print sorted(pL) == range(10000)
+
+'''
+n 100
+    0    99
+  199  9999
+ 9998  9900
+ 9800   100
+n  98
+  101   198
+  298  9898
+ 9897  9801
+ 9701   201
+n  96
+  202   297
+  397  9797
+ 9796  9702
+ 9602   302
+...
+10000
+True
+'''
+
+from PIL import Image
+import numpy as np
+
+im = Image.open('wire.png')
+iL = list(im.getdata())
+
+iL2 = [False] * 10000
+for i,v in enumerate(iL):
+    j = pL[i]
+    iL2[j] = v
+
+a = np.array(iL2, dtype='uint8')
+a.shape = (100,100,3)
+
+im2 = Image.fromarray(a)
+im2.save('14c.png')
+
+```
+
+<img src="figs/14c.png" alt="Drawing" style="width: 400px;"/>
+
+It's a bit fuzzy, but it's a cat.
+
+#### Problem 15
+
+The specific part of the url is `cat`:  [link](http://www.pythonchallenge.com/pc/return/cat.html).  The cat's name is [uzi](http://www.pythonchallenge.com/pc/return/uzi.html).
+
+<img src="figs/screen15.jpg" alt="Drawing" style="width: 400px;"/>
+
+The title is `whom?` and the note says:  `todo: buy flowers for tomorrow`.
+
+It also says:
+`<!-- he ain't the youngest, he is the second -->`
+
+The years 106 and 196 started with the 1st on a Thursday, but only 196 was a leap year.  (Feb is shown with 29 days).
+
+Unfortunately, I took the spacing too literally.  We should search all years for ones that begin on Thu and are leap years.  We will discover that 1756 qualifies.
+
+January 27, 1756 is the birthday of Mozart.
+
+How to find this using Python?  The `calendar` module.
+
+```
+>>> import calendar
+>>> print [i for i in range(1006, 2006, 10) if calendar.weekday(i, 1, 1) == 3]
+[1046, 1176, 1226, 1356, 1446, 1576, 1626, 1756, 1846, 1976]
+>>>
+```
+
+combined with [wikipedia](https://en.wikipedia.org/wiki/January_27).
+
+#### Problem 16
+
+The specific part of the url is `mozart`:  [link](http://www.pythonchallenge.com/pc/return/mozart.html).
+
+The image is `mozart.gif`.
+
+<img src="figs/mozart.gif" alt="Drawing" style="width: 400px;"/>
+
+The title is `let me get this straight`.  Nothing else interesting in the page source.
+
+The image contains these little bars:
+
+<img src="figs/16.png" alt="Drawing" style="width: 400px;"/>
+
+So my guess is that we should align each row using this data.  The size of the image is given as `640 x 480`.
+
+```
+from PIL import Image
+import numpy as np
+import sys
+
+im = Image.open('mozart.gif')
+a = np.array(im)
+print a.shape
+print a
+L = list(im.getdata())
+print len(a[0])
+print len(im.getdata())
+```
+
+```
+> python 16.py
+(480, 640) 
+[[ 24  16  22 ...,  59  16  16]
+ [ 60  59  17 ...,  94  66  48]
+ [ 46  90  95 ...,  96  17  54]
+ ..., 
+ [ 48  95  89 ...,  94  96  53]
+ [ 18  58  54 ...,  47 100  90]
+ [ 88  84  30 ...,  96  59  17]]
+640
+307200
+>
+```
+
+Although the image is RGB, there are no triplets like there were with jpg and png.  Just `307200 = 640 * 480` values.
+
+`a.shape` is `(480, 640)`.
+
+So how does that work?  In the first row, at index 429, near where I predict the tag should be from the image, I spot
+
+```
+249 195 195 195 195 195 252
+```
+
+I'm guessing that `195` is "pink" and `249, 252` are "white".  Notice the last and first are not the same!
+
+```
+for i in range(0, len(L), 640):
+    sL = L[i:i+640]
+    i = 0
+    assert sL.count(195) == 5
+    while True:
+        try:
+            result = sL.index(195,i)
+            print result,
+            i = result + 1
+        except ValueError:
+            print
+            break
+```
+This goes all the way through the data:
+
+```
+429 430 431 432 433
+500 501 502 503 504
+312 313 314 315 316
+```
+
+Note the `assert`.  There are exactly 5 instances of the value `195` in each row and they are all right next to one another.  Note the `try` clause:  it's an error to call `index` for a value that does not appear.
+
+So now all we have to do is to modify this code to rearrange each row.
+
+```
+for i in range(0, len(L), 640):
+    sL = L[i:i+640]
+    i = sL.index(195)
+    sL = sL[i:] + sL[:i]
+    pL.append(sL)
+
+for r in pL[:5]:
+    print r[:10]
+```
+
+```
+> python 16.py 
+(480, 640)
+[195, 195, 195, 195, 195, 252, 88, 48, 96, 47]
+[195, 195, 195, 195, 195, 251, 58, 131, 47, 18]
+[195, 195, 195, 195, 195, 252, 60, 47, 18, 83]
+[195, 195, 195, 195, 195, 252, 94, 125, 60, 65]
+[195, 195, 195, 195, 195, 252, 24, 91, 84, 59]
+>
+```
+    
+Save the image:
+
+```
+a = np.array(pL, dtype='uint8')
+a.shape = (480,640)
+im2 = Image.fromarray(a)
+im2.save('16.png')
+```
+
+<img src="figs/16b.png" alt="Drawing" style="width: 400px;"/>
+
+#### Problem 17
+
+The specific part of the url is `romance`:  [link](http://www.pythonchallenge.com/pc/return/romance.html).
+
+The image looks like a plate of cookies.
+
+<img src="figs/cookies.jpg" alt="Drawing" style="width: 400px;"/>
+
+And the linked list "chainsaw" image is in the corner.
+
+The source has
+
+```
+  <title>eat?</title>
+  ...
+  	<img src="cookies.jpg" border="0"/>
+```
+So I guess we are supposed to follow a linked list of cookies.  Where would we get them from?
+
+Sneaking a peak tells me that this level requires the Python `cookielib`.  The example code might also help me with my problem that I can't get `urllib` or `requests` to get pages, because I get back a 401 Unauthorized response.
+
+```
+import urllib2, cookielib
+
+auth_handler = urllib2.HTTPBasicAuthHandler()
+auth_handler.add_password(
+    'inflate', 'www.pythonchallenge.com', 'huge', 'file')
+    
+jar = cookielib.CookieJar()
+cookie_handler = urllib2.HTTPCookieProcessor(jar)
+
+opener = urllib2.build_opener(auth_handler, cookie_handler)
+opener.open('http://www.pythonchallenge.com/pc/return/romance.html')
+list(jar)
+```
+
+Now the only problem is that I have no cookies for this site.  
+
+That's probably because I'm always deleting them.  It's possible this cookie was set way back on level 8 or even before.
+
+[link](http://www.pythonchallenge.com/pc/def/integrity.html)
+
+I cleared all the data, went back to the beginning and went through each link.  But when I got to the bee on level 8, I did not get the logon screen.  It just took me directly to level 9.
+
+However, now I have a cookie, according to Safari!  Retry the code above.  Still no cookie in the jar!
+
+I go to the web, [here](https://teacode.wordpress.com/category/python-challenge/).
+
+The first part of the solution is to use `urllib` and `cookielib`:
+
+It's 50 lines, so I leave it in the script file:  [17a.py](17a.py).  I never would have figured that out.
+
+```
+> python 17.py 
+url: 12345
+response: If you came here from level 4 - go back!
+<br>You should follow the obvious chain...<br>
+<br>and the next busynothing is 44827
+  1
+url: 44827
+response: and the next busynothing is 45439
+45439 Z
+  2
+url: 45439
+response: and the next busynothing is 94485
+94485 h
+  3
+url: 94485
+response: and the next busynothing is 72198
+72198 9
+...
+...
+...
+url: 96070
+response: and the next busynothing is 83051
+83051 $
+117
+url: 83051
+response: that's it.
+ ?
+out: Zh91AY&SY?:?I!?P??g?? hE=M?#??????&S??!??i7h??+?`"?WX?L??V<ƨ?H&32?!?S
+                                                                          ȯ?KO?2??u???s???Bc?w$S?		C?$?
+>
+```
+
+So what is happening?  We get `urllib2` to build a `urllib2.Request(url)` where the url is like
+
+```
+http://www.pythonchallenge.com/pc/def/linkedlist.php?busynothing=
+```
+
+followed by a number, starting with `12345`.  We get back a cookie, which has a number for the next url, and some info, a single character.  The first three characters are `Zh9...`
+
+The whole thing is
+
+```
+Zh91AY&SY?:?I!?P??g?? hE=M?#??????&S??!??i7h??+?`"?WX?L??V<ƨ?H&32?!?S
+                                                                          ȯ?KO?2??u???s???Bc?w$S?		C?$?
+```
+
+So this is binary data (I thought you couldn't do that?).
+
+Anyway, it has a couple of '\n\n' and a '\t' that were interpreted as characters to print.  What I should've done is to `print repr(out)`, so we do it again, and make sure we pick up the `B` from the very first response.
+
+However, if we do
+
+```
+bz2.decompress(urllib.unquote_plus(out))
+```
+we'll still get an error.
+
+```
+out: 'BZh91AY&SY\x94:\xe2I\x00\x00!\x19\x80P\x81\x11\x00\xafg\x9e\xa0 \x00hE=M\xb5#\xd0\xd4\xd1\xe2\x8d\x06\xa9\xfa&S\xd4\xd3!\xa1\xeai7h\x9b\x9a+\xbf`"\xc5WX\xe1\xadL\x80\xe8V<\xc6\xa8\xdbH&32\x18\xa8x\x01\x08!\x8dS\x0b\xc8\xaf\x96KO\xca2\xb0\xf1\xbd\x1du\xa0\x86\x05\x92s\xb0\x92\xc4Bc\xf1w$S\x85\t\tC\xae$\x90'
+```
+
+I get invalid data stream.  Anyway, the message is supposed to be
+
+```
+is it the 26th already? call his father and inform him that "the flowers are on their way".
+he’ll understand.
+```
+
+So this is a reference to Mozart's father, Leopold.  We're supposed to call him.  (Level __).
+
+```
+import xmlrpclib
+
+url = 'http://www.pythonchallenge.com/pc/phonebook.php'
+server = xmlrpclib.Server(url)
+print server.phone('Leopold')
+```
+
+```
+> python 17c.py 
+555-VIOLIN
+>
+```
+
+#### Problem 18
+
+The specific part of the url is `violin`:  [link](http://www.pythonchallenge.com/pc/return/violin.html).
+
+```
+no! i mean yes! but ../stuff/violin.php.
+```
+
+[link](http://www.pythonchallenge.com/pc/stuff/violin.php).
+
+```
+<title>it's me. what do you want?</title>
+```
+
+<img src="figs/leopold.jpg" alt="Drawing" style="width: 400px;"/>
+
+And I think we'll pause there for a bit.
