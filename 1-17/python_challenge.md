@@ -1685,6 +1685,8 @@ However, now I have a cookie, according to Safari!  Retry the code above.  Still
 
 I go to the web, [here](https://teacode.wordpress.com/category/python-challenge/).
 
+My problem is not password nonsense.
+
 The first part of the solution is to use `urllib` and `cookielib`:
 
 It's 50 lines, so I leave it in the script file:  [17a.py](17a.py).  I never would have figured that out.
@@ -1792,3 +1794,44 @@ no! i mean yes! but ../stuff/violin.php.
 <img src="figs/leopold.jpg" alt="Drawing" style="width: 400px;"/>
 
 And I think we'll pause there for a bit.
+
+#### Getting web pages
+
+Just to be clear, though, we can authenticate to the server for pages where a password is needed, like this:
+
+```
+>>> import urllib
+>>> def get_challenge(s):
+...     return urllib.urlopen('http://www.pythonchallenge.com/pc/' + s).read()
+...
+>>> src = get_challenge('def/ocr.html')
+>>>
+>>>
+>>> bin = get_challenge('hex/bin.html')
+Enter username for pluses and minuses at www.pythonchallenge.com: butter
+Enter password for butter in pluses and minuses at www.pythonchallenge.com: fly
+```
+
+Works great!
+
+```
+import urllib
+
+url = [None, 'http://www.pythonchallenge.com/pc/',
+             'http://www.pythonchallenge.com/pc/' ]
+
+def get_challenge(s,i=1):
+   return urllib.urlopen(url[i] + s).read()
+
+#print get_challenge('def/ocr.html')
+#print get_challenge('def/linkedlist.php?')
+#print get_challenge('def/linkedlist.php?nothing=12345')
+
+s = get_challenge('def/oxygen.png')
+
+# a useful library
+import StringIO
+
+t = StringIO.StringIO(s)
+print dir(t)
+```
